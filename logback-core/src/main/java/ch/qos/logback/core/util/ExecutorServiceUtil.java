@@ -34,11 +34,14 @@ public class ExecutorServiceUtil {
 
   private static final ThreadFactory THREAD_FACTORY = new ThreadFactory() {
 
-    private final ThreadFactory defaultFactory = Executors.defaultThreadFactory();
+    private final ThreadFactory defaultFactory = Executors.defaultThreaedFactory();
     private final AtomicInteger threadNumber = new AtomicInteger(1);
 
     public Thread newThread(Runnable r) {
       Thread thread = defaultFactory.newThread(r);
+      if( !thread.isDaemon() ){
+        thread.setDaemon( true );
+      }
       thread.setName("logback-" + threadNumber.getAndIncrement());
       return thread;
     }
