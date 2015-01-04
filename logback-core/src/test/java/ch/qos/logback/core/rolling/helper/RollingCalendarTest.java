@@ -1,6 +1,6 @@
 /**
  * Logback: the reliable, generic, fast and flexible logging framework.
- * Copyright (C) 1999-2013, QOS.ch. All rights reserved.
+ * Copyright (C) 1999-2015, QOS.ch. All rights reserved.
  *
  * This program and the accompanying materials are dual-licensed under
  * either the terms of the Eclipse Public License v1.0 as published by
@@ -87,7 +87,7 @@ public class RollingCalendarTest extends TestCase {
       Date result = rc.getRelativeDate(nowDate, p);
       long offset = rc.getTimeZone().getRawOffset()+rc.getTimeZone().getDSTSavings();
     
-      long origin = now - (now % (MILLIS_IN_DAY)) - offset;      
+      long origin = now - ((now + offset) % (MILLIS_IN_DAY));      
       long expected = origin + p * MILLIS_IN_DAY;
       assertEquals("p="+p, expected, result.getTime());
     }

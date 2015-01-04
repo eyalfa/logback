@@ -1,6 +1,6 @@
 /**
  * Logback: the reliable, generic, fast and flexible logging framework.
- * Copyright (C) 1999-2011, QOS.ch. All rights reserved.
+ * Copyright (C) 1999-2015, QOS.ch. All rights reserved.
  *
  * This program and the accompanying materials are dual-licensed under
  * either the terms of the Eclipse Public License v1.0 as published by
@@ -11,7 +11,6 @@
  * under the terms of the GNU Lesser General Public License version 2.1
  * as published by the Free Software Foundation.
  */
-
 package ch.qos.logback.core.net;
 
 import java.io.IOException;
@@ -21,7 +20,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -77,11 +75,10 @@ public class AbstractSocketAppenderTest {
   private InstrumentedSocketAppender appender = spy(new InstrumentedSocketAppender(preSerializationTransformer, queueFactory, objectWriterFactory, socketConnector));
 
   @Before
-  public void setUp() throws Exception {
-    // setup valid appender with mock dependencies
-    when(socketConnector.call()).thenReturn(socket);
-    when(objectWriterFactory.newAutoFlushingObjectWriter(any(OutputStream.class))).thenReturn(objectWriter);
-    when(queueFactory.<String>newLinkedBlockingDeque(anyInt())).thenReturn(deque);
+  public void setupValidAppenderWithMockDependencies() throws Exception {
+
+    doReturn(objectWriter).when(objectWriterFactory).newAutoFlushingObjectWriter(any(OutputStream.class));
+    doReturn(deque).when(queueFactory).<String>newLinkedBlockingDeque(anyInt());
 
     appender.setContext(mockContext);
     appender.setRemoteHost("localhost");
@@ -91,6 +88,7 @@ public class AbstractSocketAppenderTest {
   public void tearDown() throws Exception {
     appender.stop();
     assertFalse(appender.isStarted());
+
     executorService.shutdownNow();
     assertTrue(executorService.awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS));
   }
@@ -191,9 +189,10 @@ public class AbstractSocketAppenderTest {
   }
 
   @Test
-  public void addsInfoMessageWhenSocketConnectionWasEstablished() {
+  public void addsInfoMessageWhenSocketConnectionWasEstablished() throws Exception {
 
     // when
+    mockOneSuccessfulSocketConnection();
     appender.start();
 
     // then
@@ -204,6 +203,7 @@ public class AbstractSocketAppenderTest {
   public void addsInfoMessageWhenSocketConnectionFailed() throws Exception {
 
     // given
+    mockOneSuccessfulSocketConnection();
     doThrow(new IOException()).when(objectWriterFactory).newAutoFlushingObjectWriter(any(OutputStream.class));
     appender.start();
 
@@ -218,6 +218,7 @@ public class AbstractSocketAppenderTest {
   public void closesSocketOnException() throws Exception {
 
     // given
+    mockOneSuccessfulSocketConnection();
     doThrow(new IOException()).when(objectWriterFactory).newAutoFlushingObjectWriter(any(OutputStream.class));
     appender.start();
 
@@ -232,6 +233,7 @@ public class AbstractSocketAppenderTest {
   public void addsInfoMessageWhenSocketConnectionClosed() throws Exception {
 
     // given
+    mockOneSuccessfulSocketConnection();
     doThrow(new IOException()).when(objectWriterFactory).newAutoFlushingObjectWriter(any(OutputStream.class));
     appender.start();
 
@@ -243,29 +245,43 @@ public class AbstractSocketAppenderTest {
   }
 
   @Test
-  public void shutsDownWhenConnectorTaskCouldNotBeActivated() {
+  public void shutsDownOnInterruptWhileWaitingForEvent() throws Exception {
 
     // given
-    doThrow(new RejectedExecutionException()).when(executorService).submit(socketConnector);
+    mockOneSuccessfulSocketConnection();
+    doThrow(new InterruptedException()).when(deque).takeFirst();
 
     // when
     appender.start();
 
     // then
-    verify(appender, timeout(TIMEOUT)).addInfo("shutting down");
+    verify(deque, timeout(TIMEOUT)).takeFirst();
   }
 
   @Test
-  public void shutsDownWhenConnectorTaskThrewAnException() throws Exception {
+  public void shutsDownOnInterruptWhileWaitingForSocketConnection() throws Exception {
 
     // given
-    doThrow(new IllegalStateException()).when(socketConnector).call();
+    doThrow(new InterruptedException()).when(socketConnector).call();
 
     // when
     appender.start();
 
     // then
-    verify(appender, timeout(TIMEOUT)).addInfo("shutting down");
+    verify(socketConnector, timeout(TIMEOUT)).call();
+  }
+
+  @Test
+  public void addsInfoMessageWhenShuttingDownDueToInterrupt() throws Exception {
+
+    // given
+    doThrow(new InterruptedException()).when(socketConnector).call();
+
+    // when
+    appender.start();
+
+    // then
+    verify(appender, timeout(TIMEOUT)).addInfo(contains("shutting down"));
   }
 
   @Test
@@ -315,6 +331,7 @@ public class AbstractSocketAppenderTest {
   public void takesEventsFromTheFrontOfTheDeque() throws Exception {
 
     // given
+    mockOneSuccessfulSocketConnection();
     appender.start();
     awaitStartOfEventDispatching();
 
@@ -329,6 +346,7 @@ public class AbstractSocketAppenderTest {
   public void reAddsEventAtTheFrontOfTheDequeWhenTransmissionFails() throws Exception {
 
     // given
+    mockOneSuccessfulSocketConnection();
     doThrow(new IOException()).when(objectWriter).write(anyObject());
     appender.start();
     awaitStartOfEventDispatching();
@@ -359,6 +377,7 @@ public class AbstractSocketAppenderTest {
   public void postProcessesEventsBeforeTransformingItToASerializable() throws Exception {
 
     // given
+    mockOneSuccessfulSocketConnection();
     appender.start();
     awaitStartOfEventDispatching();
 
@@ -376,6 +395,7 @@ public class AbstractSocketAppenderTest {
   public void writesSerializedEventToStream() throws Exception {
 
     // given
+    mockOneSuccessfulSocketConnection();
     when(preSerializationTransformer.transform("some event")).thenReturn("some serialized event");
     appender.start();
     awaitStartOfEventDispatching();
@@ -391,16 +411,12 @@ public class AbstractSocketAppenderTest {
   public void addsInfoMessageWhenEventIsBeingDroppedBecauseOfConnectionProblemAndDequeCapacityLimitReached() throws Exception {
 
     // given
+    mockOneSuccessfulSocketConnection();
     doThrow(new IOException()).when(objectWriter).write(anyObject());
+    doReturn(false).when(deque).offerFirst("some event");
     appender.start();
     awaitStartOfEventDispatching();
     reset(appender);
-
-    // fill up deque
-    int max = deque.remainingCapacity();
-    for (int i = 0; i < max; i++) {
-      deque.offer(""+i);
-    }
 
     // when
     appender.append("some event");
@@ -410,9 +426,10 @@ public class AbstractSocketAppenderTest {
   }
 
   @Test
-  public void reEstablishesSocketConnectionOnConnectionDrop() throws Exception {
+  public void reEstablishesSocketConnectionOnConnectionDropWhenWritingEvent() throws Exception {
 
     // given
+    mockTwoSuccessfulSocketConnections();
     doThrow(new IOException()).when(objectWriter).write(anyObject());
     appender.start();
     awaitStartOfEventDispatching();
@@ -425,9 +442,25 @@ public class AbstractSocketAppenderTest {
   }
 
   @Test
+  public void triesToReEstablishSocketConnectionIfItFailed() throws Exception {
+
+    // given
+    mockOneSuccessfulSocketConnection();
+    doThrow(new IOException()).when(socket).getOutputStream();
+    appender.start();
+
+    // when
+    appender.append("some event");
+
+    // then
+    verify(socketConnector, timeout(TIMEOUT).atLeast(2)).call();
+  }
+
+  @Test
   public void usesConfiguredAcceptConnectionTimeoutAndResetsSocketTimeoutAfterSuccessfulConnection() throws Exception {
 
     // when
+    mockOneSuccessfulSocketConnection();
     appender.setAcceptConnectionTimeout(42);
     appender.start();
     awaitStartOfEventDispatching();
@@ -444,6 +477,14 @@ public class AbstractSocketAppenderTest {
 
   private void awaitStartOfEventDispatching() throws InterruptedException {
     verify(deque, timeout(TIMEOUT)).takeFirst();
+  }
+
+  private void mockOneSuccessfulSocketConnection() throws InterruptedException {
+    doReturn(socket).doReturn(null).when(socketConnector).call();
+  }
+
+  private void mockTwoSuccessfulSocketConnections() throws InterruptedException {
+    doReturn(socket).doReturn(socket).doReturn(null).when(socketConnector).call();
   }
 
   private static class InstrumentedSocketAppender extends AbstractSocketAppender<String> {

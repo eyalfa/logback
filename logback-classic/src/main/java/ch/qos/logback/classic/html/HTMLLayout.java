@@ -1,6 +1,6 @@
 /**
  * Logback: the reliable, generic, fast and flexible logging framework.
- * Copyright (C) 1999-2013, QOS.ch. All rights reserved.
+ * Copyright (C) 1999-2015, QOS.ch. All rights reserved.
  *
  * This program and the accompanying materials are dual-licensed under
  * either the terms of the Eclipse Public License v1.0 as published by
@@ -19,6 +19,7 @@ import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.pattern.MDCConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.html.DefaultCssBuilder;
+import ch.qos.logback.core.helpers.Transform;
 import ch.qos.logback.core.html.HTMLLayoutBase;
 import ch.qos.logback.core.html.IThrowableRenderer;
 import ch.qos.logback.core.pattern.Converter;
@@ -112,7 +113,7 @@ public class HTMLLayout extends HTMLLayoutBase<ILoggingEvent> {
     buf.append("<td class=\"");
     buf.append(computeConverterName(c));
     buf.append("\">");
-    c.write(buf, event);
+    buf.append(Transform.escapeTags(c.convert(event)));
     buf.append("</td>");
     buf.append(LINE_SEPARATOR);
   }

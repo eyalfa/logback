@@ -1,6 +1,6 @@
 /**
  * Logback: the reliable, generic, fast and flexible logging framework.
- * Copyright (C) 1999-2013, QOS.ch. All rights reserved.
+ * Copyright (C) 1999-2015, QOS.ch. All rights reserved.
  *
  * This program and the accompanying materials are dual-licensed under
  * either the terms of the Eclipse Public License v1.0 as published by
@@ -67,6 +67,7 @@ public class MDCInsertingServletFilter implements Filter {
       if (requestURL != null) {
         MDC.put(ClassicConstants.REQUEST_REQUEST_URL, requestURL.toString());
       }
+      MDC.put(ClassicConstants.REQUEST_METHOD, httpServletRequest.getMethod());
       MDC.put(ClassicConstants.REQUEST_QUERY_STRING, httpServletRequest.getQueryString());
       MDC.put(ClassicConstants.REQUEST_USER_AGENT_MDC_KEY, httpServletRequest
               .getHeader("User-Agent"));
@@ -82,6 +83,7 @@ public class MDCInsertingServletFilter implements Filter {
     MDC.remove(ClassicConstants.REQUEST_QUERY_STRING);
     // removing possibly inexistent item is OK
     MDC.remove(ClassicConstants.REQUEST_REQUEST_URL);
+    MDC.remove(ClassicConstants.REQUEST_METHOD);
     MDC.remove(ClassicConstants.REQUEST_USER_AGENT_MDC_KEY);
     MDC.remove(ClassicConstants.REQUEST_X_FORWARDED_FOR);
   }

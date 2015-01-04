@@ -1,6 +1,6 @@
 /**
  * Logback: the reliable, generic, fast and flexible logging framework.
- * Copyright (C) 1999-2013, QOS.ch. All rights reserved.
+ * Copyright (C) 1999-2015, QOS.ch. All rights reserved.
  *
  * This program and the accompanying materials are dual-licensed under
  * either the terms of the Eclipse Public License v1.0 as published by
@@ -35,6 +35,9 @@ public class DummyResponse implements HttpServletResponse {
 
   int status = DUMMY_DEFAULT_STATUS;
   public Map<String, String> headerMap;
+
+  String characterEncoding = null;
+  ServletOutputStream outputStream = null;
 
   public DummyResponse() {
     headerMap = DUMMY_DEFAULT_HDEADER_MAP;
@@ -101,7 +104,7 @@ public class DummyResponse implements HttpServletResponse {
   }
 
   public String getCharacterEncoding() {
-    return null;
+    return characterEncoding;
   }
 
   public String getContentType() {
@@ -113,7 +116,11 @@ public class DummyResponse implements HttpServletResponse {
   }
 
   public ServletOutputStream getOutputStream() throws IOException {
-    return null;
+    return outputStream;
+  }
+
+  public void setOutputStream(ServletOutputStream outputStream) {
+    this.outputStream = outputStream;
   }
 
   public PrintWriter getWriter() throws IOException {
@@ -133,7 +140,8 @@ public class DummyResponse implements HttpServletResponse {
   public void setBufferSize(int arg0) {
   }
 
-  public void setCharacterEncoding(String arg0) {
+  public void setCharacterEncoding(String characterEncoding) {
+    this.characterEncoding = characterEncoding;
   }
 
   public void setContentLength(int arg0) {

@@ -1,6 +1,6 @@
 /**
  * Logback: the reliable, generic, fast and flexible logging framework.
- * Copyright (C) 1999-2013, QOS.ch. All rights reserved.
+ * Copyright (C) 1999-2015, QOS.ch. All rights reserved.
  *
  * This program and the accompanying materials are dual-licensed under
  * either the terms of the Eclipse Public License v1.0 as published by
@@ -73,23 +73,11 @@ public class DilutedSMTPAppenderTest {
 
   @Test
   public void testStart() {
-    try {
-      Address[] addressArray = appender.getMessage().getFrom();
-      Address address = addressArray[0];
-      assertEquals("user@host.dom", address.toString());
+    assertEquals("sebastien.nospam@qos.ch%nopex", appender.getToAsListOfString().get(0));
 
-      addressArray = null;
-      address = null;
+    assertEquals("logging report", appender.getSubject());
 
-      assertEquals("sebastien.nospam@qos.ch%nopex", appender.getToAsListOfString().get(0));
-
-      assertEquals("logging report", appender.getSubject());
-
-      assertTrue(appender.isStarted());
-
-    } catch (MessagingException ex) {
-      fail("Unexpected exception.");
-    }
+    assertTrue(appender.isStarted());
   }
 
   @Test
@@ -105,13 +93,6 @@ public class DilutedSMTPAppenderTest {
   public void testEntryConditionsCheck() {
     appender.checkEntryConditions();
     assertEquals(0, appender.getContext().getStatusManager().getCount());
-  }
-
-  @Test
-  public void testEntryConditionsCheckNoMessage() {
-    appender.setMessage(null);
-    appender.checkEntryConditions();
-    assertEquals(1, appender.getContext().getStatusManager().getCount());
   }
 
   @Test

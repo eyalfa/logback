@@ -37,6 +37,35 @@
       logback mailing lists with no objections received.</h4>
     </div>
 
+    <p>Fixed an issue with <code>TeeHttpServletResponse</code>
+    where the the system default encoding would be used instead of the
+    response encoding when constructing a new writer
+    (<a href="http://jira.qos.ch/browse/LOGBACK-1023">LOGBACK-1023)</a>.<p>
+
+    <p>Fixed <code>ConfigurationDelegate.groovy</code> to allow any appender
+    that implements <code>AppenderAttachable</code>, which supports third-party
+    appenders, such as <b>reactor-logback's</b> <code>AsyncAppender</code>
+    (<a href="http://jira.qos.ch/browse/LOGBACK-1008">LOGBACK-1008</a>)</p>
+
+    <p>Added support for specifying the callstack depth range in the
+    <code>PatternLayout</code>. For example, <code>%caller{1..2}</code>
+    displays the first two calls in the callstack.</p>
+
+    <p>Added HTTP request method to <code>MDCInsertingServletFilter</code>.</p>
+
+    <p>Fixed time-zone dependent code in <code>RollingCalendarTest</code>.
+    (<a href="http://jira.qos.ch/browse/LOGBACK-116">LOGBACK-116</a>)
+    </p>
+
+    <p>Simplified connection logic of SocketApender to reduce multi-threading
+    overhead and unnecessary instantiation of <code>SocketConnector</code>
+    objects.<p>
+
+    <p>Fixed race condition in <code>SMTPAppenderBase</code> causing missing or
+    duplicate emails.
+    (<a href="http://jira.qos.ch/browse/LOGBACK-909">LOGBACK-909</a>)
+    </p>
+
     <p>Fixed an issue with <code>FileAppender</code> in prudent mode, where
     an interrupt could prevent further access to the file
     (<a href="http://jira.qos.ch/browse/LOGBACK-875">LOGBACK-875)</a>.<p>
@@ -126,6 +155,11 @@
     <p>In case of missing included files, IncludeAction no longer
     prints a stack trace but prints a warning instead. (<a
     href="http://jira.qos.ch/browse/LOGBACK-954">LOGBACK-954</a>)
+
+    <p>Fixed character escaping in XMLLayout
+    (<a href="http://jira.qos.ch/browse/LOGBACK-728">LOGBACK-728</a>)
+    and HTMLLayout
+    (<a href="http://jira.qos.ch/browse/LOGBACK-440">LOGBACK-440</a>).</p>
 
     <hr width="80%" align="center" />
 

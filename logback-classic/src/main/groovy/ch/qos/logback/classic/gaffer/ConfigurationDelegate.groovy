@@ -1,6 +1,6 @@
 /**
  * Logback: the reliable, generic, fast and flexible logging framework.
- * Copyright (C) 1999-2010, QOS.ch. All rights reserved.
+ * Copyright (C) 1999-2015, QOS.ch. All rights reserved.
  *
  * This program and the accompanying materials are dual-licensed under
  * either the terms of the Eclipse Public License v1.0 as published by
@@ -133,7 +133,7 @@ public class ConfigurationDelegate extends ContextAwareBase {
     appender.context = context
     appenderList.add(appender)
     if (closure != null) {
-      AppenderDelegate ad = clazz.name == 'ch.qos.logback.classic.AsyncAppender' ? new AsyncAppenderDelegate(appender, appenderList) : new AppenderDelegate(appender);
+      AppenderDelegate ad = new AppenderDelegate(appender, appenderList)
       copyContributions(ad, appender)
       ad.context = context;
       closure.delegate = ad;
