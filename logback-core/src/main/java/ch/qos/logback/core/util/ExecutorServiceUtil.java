@@ -38,7 +38,7 @@ public class ExecutorServiceUtil {
 
     public Thread newThread(Runnable r) {
       Thread thread = defaultFactory.newThread(r);
-      if( !thread.isDaemon() ){
+      if(!thread.isDaemon()){
         thread.setDaemon( true );
       }
       thread.setName("logback-" + threadNumber.getAndIncrement());
