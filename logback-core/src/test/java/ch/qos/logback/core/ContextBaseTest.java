@@ -140,7 +140,7 @@ public class ContextBaseTest {
       }
     });
     synchronized (executingThreads){
-      while(executingThreads.isEmpty()){
+      while (executingThreads.isEmpty()) {
         executingThreads.wait();
       }
     }
